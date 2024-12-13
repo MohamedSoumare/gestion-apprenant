@@ -12,25 +12,18 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
-
-
-enum LearnerStatus {
+enum StudentStatus {
   ACTIVE
   INACTIVE
   SUSPENDED
 }
 
-enum TrainingLevel {
+enum ModuleStatus {
   BEGINNER
   INTERMEDIATE
   ADVANCED
 }
 
-enum EnrollmentStatus {
-  IN_PROGRESS
-  COMPLETED
-  CANCELLED
-}
 
 enum PaymentMethod {
   CARD
@@ -38,100 +31,72 @@ enum PaymentMethod {
   CASH
 }
 
-
-enum Role {
-  ADMIN
-  User
-}
-
-// Prisma schema for the requested models
-model User {
-  id       Int      @id @default(autoincrement())
-  fullName String   @map("full_name") @db.VarChar(50)
-  email    String   @db.VarChar(100)
-  status   Boolean
-  password String   @db.Text
-  role     Role     
-  
-  // Relations
-  modules       Module[]
-  students      Student[]
-  registrations Registration[]
-  payments      Payment[]
-
-   @@map("users")
-}
-
+// Modèle Module
 model Module {
-  id       Int      @id @default(autoincrement())
-  name     String   @db.VarChar(50)
-  duration DateTime
-  price    Decimal  @db.Decimal(10, 2)
-  status   EnrollmentStatus @default(IN_PROGRESS)
-
-  maxParticipants Int
-  level      TrainingLevel
-  userId   Int?
-  user     User?     @relation(fields: [userId], references: [id])
-
-  // Relations
-  registrations Registration[]
-   @@map("modules")
-}
-
-model Learner {
-  id          Int      @id @default(autoincrement())
-  fullName    String   @map("full_name") @db.VarChar(50)
-  phoneNumber String   @map("phone_number") @db.VarChar(15)
-  email       String   @db.VarChar(100)
-  address     String   @db.VarChar(100)
-  tutor       String   @db.VarChar(50)
-  status      LearnerStatus
-
-  userId   Int?
-  user     User?     @relation(fields: [userId], references: [id])
+  id       Int          @id @default(autoincrement())
+  name     String       @db.VarChar(50)
+  duration Int
+  price    Decimal      @db.Decimal(10, 2)
+  status   ModuleStatus
 
   // Relations
   registrations Registration[]
   payments      Payment[]
 
-   @@map("learner")
+  @@map("modules")
 }
 
+// Modèle Student
+model Student {
+  id          Int           @id @default(autoincrement())
+  fullName    String        @map("full_name") @db.VarChar(50)
+  phoneNumber String        @map("phone_number") @db.VarChar(15) @unique
+  email       String        @db.VarChar(100) @unique
+  address     String        @db.VarChar(100)
+  tutor       String        @db.VarChar(50)
+  status      StudentStatus
+
+  // Relations
+  registrations Registration[]
+  payments      Payment[]
+
+  @@map("students")
+}
+
+// Modèle Registration
 model Registration {
   id           Int      @id @default(autoincrement())
   dateRegister DateTime @map("date_register")
   startDate    DateTime @map("start_date")
   endDate      DateTime @map("end_date")
-  mount        Decimal  @db.Decimal(10, 2)
-
-  learnerId Int
-  moduleId  Int
-  userId    Int?
-
-  student   Student @relation(fields: [learnerId], references: [id])
-  module    Module  @relation(fields: [moduleId], references: [id])
-  user      User?    @relation(fields: [userId], references: [id])
-
-  // Relations
-  payments Payment[]
-}
-
-model Payment {
-  id           Int      @id @default(autoincrement())
-  paymentDate  DateTime @map("payment_date")
   amount       Decimal  @db.Decimal(10, 2)
-  payer        String   @db.VarChar(50)
-  payerNumber  String   @map("payer_number") @db.VarChar(15)
-  paymentMode  String   @map("payment_mode") @db.VarChar(50)
-  
-  learnerId     Int
-  moduleId      Int
-  registrationId Int
-  userId        Int?
 
-  student       Student       @relation(fields: [learnerId], references: [id])
-  module        Module        @relation(fields: [moduleId], references: [id])
-  registration  Registration  @relation(fields: [registrationId], references: [id])
-  user          User?          @relation(fields: [userId], references: [id])
+  studentId Int
+  moduleId  Int
+
+  student Student @relation(fields: [studentId], references: [id])
+  module  Module  @relation(fields: [moduleId], references: [id])
+
+  payments Payment[]
+
+  @@map("registrations")
+}
+// Modèle Payment
+model Payment {
+  id          Int           @id @default(autoincrement())
+  paymentDate DateTime      @map("payment_date")
+  amount      Decimal       @db.Decimal(10, 2)
+  payer       String        @db.VarChar(50)
+  payerNumber String        @map("payer_number") @db.VarChar(15)
+  paymentMode PaymentMethod
+
+  // Relations obligatoires
+  registrationId Int
+  registration   Registration @relation(fields: [registrationId], references: [id])
+  moduleId       Int
+  module         Module       @relation(fields: [moduleId], references: [id])
+  studentId      Int
+  student        Student      @relation(fields: [studentId], references: [id])
+
+  @@map("payments")
 }

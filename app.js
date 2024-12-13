@@ -2,13 +2,10 @@ import express from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import morgan from 'morgan';
-import userRoutes from './routes/userRoutes.js';
-import authRoutes from './routes/authRoutes.js';
-import customerRoutes from './routes/customerRoutes.js';
-import vehicleRoutes from './routes/vechicleRoutes.js';
-import reservationRoutes from './routes/reservationRoutes.js';
-import contractRoutes from './routes/contractRoutes.js';
-import { errorHandler } from './src/middlewares/errorHandler.js';
+
+import studentRoutes from './src/routes/studentRoutes.js';
+
+
 
 dotenv.config();
 
@@ -27,20 +24,15 @@ const corsOptions = {
 app.use(cors(corsOptions));
 
 // Routes
-app.use(userRoutes);
-app.use(authRoutes);
-app.use(customerRoutes);
-app.use(vehicleRoutes);
-app.use(reservationRoutes);
-app.use(contractRoutes);
+
+app.use(studentRoutes);
+
 
 // 404 Error for undefined routes
 app.use((req, res, next) => {
   res.status(404).json({ message: 'Route non trouvée' });
 });
 
-// Global error handler
-app.use(errorHandler);
 
 const PORT = process.env.PORT || 5001;
 app.listen(PORT, () => {
