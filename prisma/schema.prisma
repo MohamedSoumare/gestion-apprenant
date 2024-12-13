@@ -1,0 +1,137 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+
+enum LearnerStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+
+enum TrainingLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+}
+
+enum EnrollmentStatus {
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum PaymentMethod {
+  CARD
+  BANK_TRANSFER
+  CASH
+}
+
+
+enum Role {
+  ADMIN
+  User
+}
+
+// Prisma schema for the requested models
+model User {
+  id       Int      @id @default(autoincrement())
+  fullName String   @map("full_name") @db.VarChar(50)
+  email    String   @db.VarChar(100)
+  status   Boolean
+  password String   @db.Text
+  role     Role     
+  
+  // Relations
+  modules       Module[]
+  students      Student[]
+  registrations Registration[]
+  payments      Payment[]
+
+   @@map("users")
+}
+
+model Module {
+  id       Int      @id @default(autoincrement())
+  name     String   @db.VarChar(50)
+  duration DateTime
+  price    Decimal  @db.Decimal(10, 2)
+  status   EnrollmentStatus @default(IN_PROGRESS)
+
+  maxParticipants Int
+  level      TrainingLevel
+  userId   Int?
+  user     User?     @relation(fields: [userId], references: [id])
+
+  // Relations
+  registrations Registration[]
+   @@map("modules")
+}
+
+model Learner {
+  id          Int      @id @default(autoincrement())
+  fullName    String   @map("full_name") @db.VarChar(50)
+  phoneNumber String   @map("phone_number") @db.VarChar(15)
+  email       String   @db.VarChar(100)
+  address     String   @db.VarChar(100)
+  tutor       String   @db.VarChar(50)
+  status      LearnerStatus
+
+  userId   Int?
+  user     User?     @relation(fields: [userId], references: [id])
+
+  // Relations
+  registrations Registration[]
+  payments      Payment[]
+
+   @@map("learner")
+}
+
+model Registration {
+  id           Int      @id @default(autoincrement())
+  dateRegister DateTime @map("date_register")
+  startDate    DateTime @map("start_date")
+  endDate      DateTime @map("end_date")
+  mount        Decimal  @db.Decimal(10, 2)
+
+  learnerId Int
+  moduleId  Int
+  userId    Int?
+
+  student   Student @relation(fields: [learnerId], references: [id])
+  module    Module  @relation(fields: [moduleId], references: [id])
+  user      User?    @relation(fields: [userId], references: [id])
+
+  // Relations
+  payments Payment[]
+}
+
+model Payment {
+  id           Int      @id @default(autoincrement())
+  paymentDate  DateTime @map("payment_date")
+  amount       Decimal  @db.Decimal(10, 2)
+  payer        String   @db.VarChar(50)
+  payerNumber  String   @map("payer_number") @db.VarChar(15)
+  paymentMode  String   @map("payment_mode") @db.VarChar(50)
+  
+  learnerId     Int
+  moduleId      Int
+  registrationId Int
+  userId        Int?
+
+  student       Student       @relation(fields: [learnerId], references: [id])
+  module        Module        @relation(fields: [moduleId], references: [id])
+  registration  Registration  @relation(fields: [registrationId], references: [id])
+  user          User?          @relation(fields: [userId], references: [id])
+}
