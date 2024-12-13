@@ -10,34 +10,34 @@ import {
 const router = express.Router();
 
 router.post(
-  '/students/add',
+  '/',
   handleValidationErrors,
   createValidators,
   studentController.addStudent
 );
 
 router.put(
-  '/students/update/:id',
+  '/:id',
   handleValidationErrors,
   updateValidators,
   studentController.updateStudent
 );
 
 router.get(
-  '/students/:id',
+  '/:id',
   handleValidationErrors,
   studentController.getStudentById
 );
 
 router.delete(
-  '/students/delete/:id',
+  '/:id',
   handleValidationErrors,
   deleteValidators,
   studentController.deleteStudent
 );
 
 router.get(
-  '/students',
+  '/',
   handleValidationErrors,
   studentController.getAllStudents
 );
