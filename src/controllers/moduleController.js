@@ -68,7 +68,7 @@ export const createModule = async (req, res) => {
     const module = await prisma.module.create({
       data: {
         name,
-        duration,
+        duration:parseInt(duration, 10),
         price,
         status,
       },
