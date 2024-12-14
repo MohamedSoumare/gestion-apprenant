@@ -5,7 +5,7 @@ import morgan from 'morgan';
 
 import moduleRoutes from './src/routes/moduleRoutes.js';
 import registrationRoutes from './src/routes/registrationRoutes.js';
-// import paymentRoutes from './src/routes/paymentRoutes.js';
+import paymentRoutes from './src/routes/paymentRoutes.js';
 
 import studentRoutes from './src/routes/studentRoutes.js';
 
@@ -33,7 +33,7 @@ app.use(cors(corsOptions));
 app.use('/api/students', studentRoutes);  
 app.use('/api/modules', moduleRoutes);
 app.use('/api/registrations', registrationRoutes); 
-// app.use('/api/payments', paymentRoutes); 
+app.use('/api/payments', paymentRoutes); 
 
 // app.use();
 

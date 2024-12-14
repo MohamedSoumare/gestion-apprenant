@@ -91,7 +91,7 @@ export const updateModule = async (req, res) => {
       where: { id: parseInt(id) },
       data: {
         name,
-        duration,
+        duration:parseInt(duration, 10),
         price,
         status,
       },
@@ -108,6 +108,7 @@ export const updateModule = async (req, res) => {
 export const deleteModule = async (req, res) => {
   const { id } = req.params;
   try {
+    
     const deletedModule = await prisma.module.delete({
       where: { id: parseInt(id) },
     });

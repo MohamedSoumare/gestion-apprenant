@@ -23,8 +23,11 @@ export const getAllRegistrations = async (req, res) => {
     });
     res.status(200).json(registrations);
   } catch (error) {
-    console.error("Erreur lors de la récupération des inscriptions :", error);
-    res.status(500).json({ error: "Une erreur est survenue lors de la récupération des inscriptions." });
+    console.error('Erreur lors de la récupération des inscriptions :', error);
+    res.status(500).json({
+      error:
+        'Une erreur est survenue lors de la récupération des inscriptions.',
+    });
   }
 };
 export const getRegistrationById = async (req, res) => {
@@ -52,69 +55,91 @@ export const getRegistrationById = async (req, res) => {
     });
 
     if (!registration) {
-      return res.status(404).json({ error: "Inscription non trouvée." });
+      return res.status(404).json({ error: 'Inscription non trouvée.' });
     }
 
     res.status(200).json(registration);
   } catch (error) {
     console.error("Erreur lors de la récupération de l'inscription :", error);
-    res.status(500).json({ error: "Une erreur est survenue lors de la récupération de l'inscription." });
+    res.status(500).json({
+      error:
+        "Une erreur est survenue lors de la récupération de l'inscription.",
+    });
   }
 };
 
 // Fonction pour créer une nouvelle inscription
 export const createRegistration = async (req, res) => {
   try {
-    const { dateRegister,studentId, moduleId, startDate, amount } = req.body;
+    const { dateRegister, studentId, moduleId, startDate } = req.body;
 
     // Vérifier si l'étudiant existe
-    const studentExists = await prisma.student.findUnique({ where: { id: studentId } });
+    const studentExists = await prisma.student.findUnique({
+      where: { id: studentId },
+    });
     if (!studentExists) {
-      return res.status(400).json({ error: "L'étudiant spécifié n'existe pas." });
+      return res
+        .status(400)
+        .json({ error: "L'étudiant spécifié n'existe pas." });
     }
 
-    // Vérifier si le module existe
-    const moduleExists = await prisma.module.findUnique({ where: { id: moduleId } });
+    // Vérifier si le module existe et récupérer son prix
+    const moduleExists = await prisma.module.findUnique({
+      where: { id: moduleId },
+    });
     if (!moduleExists) {
-      return res.status(400).json({ error: "Le module spécifié n'existe pas." });
+      return res
+        .status(400)
+        .json({ error: "Le module spécifié n'existe pas." });
     }
 
+    // Le prix du module
+    const amount = moduleExists.price;
+
+    // Vérifier si la date d'enregistrement est valide
     if (dateRegister && isNaN(Date.parse(dateRegister))) {
-      return res.status(400).json({ error: "La date d'enregistrement spécifiée n'est pas valide." });
+      return res.status(400).json({
+        error: "La date d'enregistrement spécifiée n'est pas valide.",
+      });
     }
 
     // Vérifier si startDate est une date valide
     if (!startDate || isNaN(Date.parse(startDate))) {
-      return res.status(400).json({ error: "La date de début spécifiée n'est pas valide." });
+      return res
+        .status(400)
+        .json({ error: "La date de début spécifiée n'est pas valide." });
     }
 
     // Calculer la date de fin
     const endDate = new Date(startDate);
     endDate.setDate(endDate.getDate() + moduleExists.duration);
 
-    // Créer l'inscription
+    // Créer l'inscription avec le montant récupéré
     const newRegistration = await prisma.registration.create({
       data: {
         studentId,
         moduleId,
         startDate: new Date(startDate),
         endDate: new Date(endDate),
-        amount,
-        dateRegister: new Date(dateRegister),
+        amount, 
+        dateRegister: new Date(),
       },
     });
 
     res.status(201).json(newRegistration);
   } catch (error) {
     console.error("Erreur lors de la création de l'inscription :", error);
-    res.status(500).json({ error: "Une erreur est survenue lors de la création de l'inscription." });
+    res.status(500).json({
+      error: "Une erreur est survenue lors de la création de l'inscription.",
+    });
   }
 };
 
 // Fonction pour mettre à jour une inscription
 export const updateRegistration = async (req, res) => {
   const { id } = req.params;
-  const { studentId, moduleId, startDate, endDate, amount, dateRegister } = req.body;
+  const { studentId, moduleId, startDate, endDate, amount, dateRegister } =
+    req.body;
 
   try {
     // Vérifier si l'inscription existe
@@ -123,38 +148,54 @@ export const updateRegistration = async (req, res) => {
     });
 
     if (!registrationExists) {
-      return res.status(404).json({ error: "L'inscription spécifiée n'existe pas." });
+      return res
+        .status(404)
+        .json({ error: "L'inscription spécifiée n'existe pas." });
     }
 
     // Vérifier si l'étudiant existe
     if (studentId) {
-      const studentExists = await prisma.student.findUnique({ where: { id: studentId } });
+      const studentExists = await prisma.student.findUnique({
+        where: { id: studentId },
+      });
       if (!studentExists) {
-        return res.status(400).json({ error: "L'étudiant spécifié n'existe pas." });
+        return res
+          .status(400)
+          .json({ error: "L'étudiant spécifié n'existe pas." });
       }
     }
 
     // Vérifier si le module existe
     if (moduleId) {
-      const moduleExists = await prisma.module.findUnique({ where: { id: moduleId } });
+      const moduleExists = await prisma.module.findUnique({
+        where: { id: moduleId },
+      });
       if (!moduleExists) {
-        return res.status(400).json({ error: "Le module spécifié n'existe pas." });
+        return res
+          .status(400)
+          .json({ error: "Le module spécifié n'existe pas." });
       }
     }
 
     // Vérifier si startDate est une date valide
     if (startDate && isNaN(Date.parse(startDate))) {
-      return res.status(400).json({ error: "La date de début spécifiée n'est pas valide." });
+      return res
+        .status(400)
+        .json({ error: "La date de début spécifiée n'est pas valide." });
     }
 
     // Vérifier si endDate est une date valide
     if (endDate && isNaN(Date.parse(endDate))) {
-      return res.status(400).json({ error: "La date de fin spécifiée n'est pas valide." });
+      return res
+        .status(400)
+        .json({ error: "La date de fin spécifiée n'est pas valide." });
     }
 
     // Vérifier si dateRegister est une date valide
     if (dateRegister && isNaN(Date.parse(dateRegister))) {
-      return res.status(400).json({ error: "La date d'enregistrement spécifiée n'est pas valide." });
+      return res.status(400).json({
+        error: "La date d'enregistrement spécifiée n'est pas valide.",
+      });
     }
 
     // Mettre à jour l'inscription
@@ -173,7 +214,9 @@ export const updateRegistration = async (req, res) => {
     res.status(200).json(updatedRegistration);
   } catch (error) {
     console.error("Erreur lors de la mise à jour de l'inscription :", error);
-    res.status(500).json({ error: "Une erreur est survenue lors de la mise à jour de l'inscription." });
+    res.status(500).json({
+      error: "Une erreur est survenue lors de la mise à jour de l'inscription.",
+    });
   }
 };
 
@@ -188,7 +231,10 @@ export const deleteRegistration = async (req, res) => {
     });
 
     if (paymentsLinked.length > 0) {
-      return res.status(400).json({ error: "Impossible de supprimer l'inscription car des paiements y sont liés." });
+      return res.status(400).json({
+        error:
+          "Impossible de supprimer l'inscription car des paiements y sont liés.",
+      });
     }
 
     // Supprimer l'inscription si aucun paiement n'est lié
@@ -196,9 +242,14 @@ export const deleteRegistration = async (req, res) => {
       where: { id: parseInt(id) },
     });
 
-    res.status(200).json({ message: "Inscription supprimée avec succès.", deletedRegistration });
+    res.status(200).json({
+      message: 'Inscription supprimée avec succès.',
+      deletedRegistration,
+    });
   } catch (error) {
     console.error("Erreur lors de la suppression de l'inscription :", error);
-    res.status(500).json({ error: "Une erreur est survenue lors de la suppression de l'inscription." });
+    res.status(500).json({
+      error: "Une erreur est survenue lors de la suppression de l'inscription.",
+    });
   }
 };

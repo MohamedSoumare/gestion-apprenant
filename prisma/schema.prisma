@@ -1,8 +1,4 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+// Prisma schema ajusté selon le MCD et MLD
 
 generator client {
   provider = "prisma-client-js"
@@ -12,6 +8,7 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
 enum StudentStatus {
   ACTIVE
   INACTIVE
@@ -24,6 +21,10 @@ enum ModuleStatus {
   ADVANCED
 }
 
+enum RegistrationStatus {
+  COMPLETED
+  CANCELLED
+}
 
 enum PaymentMethod {
   CARD
@@ -36,7 +37,7 @@ model Module {
   id       Int          @id @default(autoincrement())
   name     String       @db.VarChar(50)
   duration Int
-  price    Decimal      @db.Decimal(10, 2)
+  price    Decimal?      @db.Decimal(10, 2)
   status   ModuleStatus
 
   // Relations
@@ -50,8 +51,8 @@ model Module {
 model Student {
   id          Int           @id @default(autoincrement())
   fullName    String        @map("full_name") @db.VarChar(50)
-  phoneNumber String        @map("phone_number") @db.VarChar(15) @unique
-  email       String        @db.VarChar(100) @unique
+  phoneNumber String        @map("phone_number") @db.VarChar(15)
+  email       String?        @db.VarChar(100)
   address     String        @db.VarChar(100)
   tutor       String        @db.VarChar(50)
   status      StudentStatus
@@ -70,9 +71,10 @@ model Registration {
   startDate    DateTime @map("start_date")
   endDate      DateTime @map("end_date")
   amount       Decimal  @db.Decimal(10, 2)
+  rest         Decimal? @db.Decimal(10, 2)
 
-  studentId Int
-  moduleId  Int
+  studentId    Int
+  moduleId     Int
 
   student Student @relation(fields: [studentId], references: [id])
   module  Module  @relation(fields: [moduleId], references: [id])
@@ -81,11 +83,12 @@ model Registration {
 
   @@map("registrations")
 }
+
 // Modèle Payment
 model Payment {
-  id          Int           @id @default(autoincrement())
-  paymentDate DateTime      @map("payment_date")
-  amount      Decimal       @db.Decimal(10, 2)
+  id          Int      @id @default(autoincrement())
+  paymentDate DateTime @map("payment_date")
+  amount      Decimal  @db.Decimal(10, 2)
   payer       String        @db.VarChar(50)
   payerNumber String        @map("payer_number") @db.VarChar(15)
   paymentMode PaymentMethod
